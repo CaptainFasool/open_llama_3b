@@ -6,6 +6,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Parameters
 model_name = 'KBlueLeaf/guanaco-7b-leh-v2'
+filename = "conversation.txt"
 
 def generate_text(model, tokenizer, prompt):
     # Encode the input and send to device
@@ -23,11 +24,7 @@ def generate_text(model, tokenizer, prompt):
 
     return output_text
 
-def chatbot(text):
-    # Load the model and tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForCausalLM.from_pretrained(model_name).to(device)
-    
+def chatbot(model, tokenizer, text):
     # Open the file in append mode
     with open(filename, "a+") as f:
         f.seek(0)  # go to the beginning of the file
@@ -43,9 +40,13 @@ def chatbot(text):
     return "\n".join(updated_conversation[len(previous_conversation):])
 
 def main():
+    # Load the model and tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(model_name).to(device)
+    
     while True:
         prompt = input("Please enter a prompt: ")
-        response = chatbot(prompt)
+        response = chatbot(model, tokenizer, prompt)
         print("Generated Text:")
         print(response)
 
