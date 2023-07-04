@@ -1,21 +1,31 @@
 import torch
-from transformers import LlamaTokenizer, LlamaForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
-# Choose the model path according to which model you want to load
-model_path = 'openlm-research/open_llama_3b'
+def generate_text(prompt):
+    # Specify the model path
+    model_path = 'openlm-research/open_llama_7b'
 
-tokenizer = LlamaTokenizer.from_pretrained(model_path)
+    # Load the tokenizer and the model
+    tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False)
+    model = AutoModelForCausalLM.from_pretrained(model_path)
 
-# Detect if we have a GPU available
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # Convert the prompt to model inputs
+    input_ids = tokenizer.encode(prompt, return_tensors='pt')
 
-model = LlamaForCausalLM.from_pretrained(model_path, torch_dtype=torch.float16)
-model.to(device)  # move the model to GPU if available
+    # Generate text
+    output = model.generate(input_ids, max_length=100, temperature=0.7, num_return_sequences=1)
 
-prompt = 'Q: What is the largest animal?\nA:'
-input_ids = tokenizer(prompt, return_tensors="pt").input_ids
-input_ids = input_ids.to(device)  # move the input to GPU if available
+    # Decode the output and return the text
+    return tokenizer.decode(output[0], skip_special_tokens=True)
 
-# Generate text
-generation_output = model.generate(input_ids, max_new_tokens=32)
-print(tokenizer.decode(generation_output[0]))
+# Infinite loop to continually ask for prompts
+while True:
+    # Get user input
+    prompt = input("Please enter a prompt: ")
+    
+    # If the user types 'quit', break the loop
+    if prompt.lower() == 'quit':
+        break
+    
+    # Generate text based on the prompt and print it
+    print(generate_text(prompt))
